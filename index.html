@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial; text-align: center; background:#f2f2f2;">
+
+<h1>simple poll App</h1>
+<h2 id="q"></h2>
+<div id="ops"></div>
+
+<script>
+const API = "http://127.0.0.1:5000";
+let voted = localStorage.getItem("voted");
+
+function load(){
+ fetch(API+"/poll")
+ .then(r=>r.json())
+ .then(d=>{
+   document.getElementById("q").innerText = d.question;
+
+   let total = d.options.reduce((a,b)=>a+b.votes,0);
+   let html="";
+
+   d.options.forEach((o,i)=>{
+     let percent = total ? Math.round((o.votes/total)*100) : 0;
+
+     html += `
+     <button style="padding:10px; margin:5px; cursor:pointer;" ${voted ? "disabled" : ""} onclick="vote(${i})">
+       ${o.text}
+     </button>
+     <div style="background:green;width:${percent}%;color:white">
+       ${percent}% (${o.votes})
+     </div><br>`;
+   });
+
+   document.getElementById("ops").innerHTML = html;
+ });
+}
+
+function vote(i){
+ if(voted){
+   alert("You already voted!");
+   return;
+ }
+
+ fetch(API+"/vote",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body: JSON.stringify({option:i})
+ }).then(()=>{
+   localStorage.setItem("voted","yes");
+   load();
+ });
+}
+
+load();
+</script>
+
+</body>
+</html>
